@@ -1,4 +1,26 @@
-    const loadLessons = () => {
+const createElements = (arr) => {
+    const htmlElements = arr.map((el) => `<span class="btn">${el}</span>`);
+    return htmlElements.join(" ");
+};  
+
+function pronounceWord(word) {
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = "en-EN"; // English
+  window.speechSynthesis.speak(utterance);
+}
+
+const manageSpinner = (status) => {
+    
+    if(status == true){
+        document.getElementById("spinner").classList.remove("hidden");
+        document.getElementById("word-container").classList.add("hidden");
+    } else {
+        document.getElementById("word-container").classList.remove("hidden");
+        document.getElementById("spinner").classList.add("hidden");
+    }
+};
+
+const loadLessons = () => {
     fetch("https://openapi.programming-hero.com/api/levels/all")
     .then((res) => res.json())
     .then((data) => 
@@ -12,6 +34,7 @@
     }
 
     const loadLevelWord = (id) => {
+        manageSpinner(true);
         const url = `https://openapi.programming-hero.com/api/level/${id}`
         fetch(url)
         .then((res) => res.json())
@@ -24,6 +47,7 @@
     };
 
     const loadDetails = async (id) => {
+        
         const url = `https://openapi.programming-hero.com/api/word/${id}`;
         // console.log(url);
         const res = await fetch(url);
@@ -48,9 +72,9 @@
         </div>
         <div class="">
             <h2 class="font-medium text-[24px]">সমার্থক শব্দ গুলো</h2>
-            <span class="btn">${word.synonyms[0] ? word.synonyms[0] : "শব্দ পাওয়া যায়নি"}</span>
-            <span class="btn">${word.synonyms[1] ? word.synonyms[1] : "শব্দ পাওয়া যায়নি"}</span>
-            <span class="btn">${word.synonyms[2] ? word.synonyms[2] : "শব্দ পাওয়া যায়নি"}</span>
+            <div class="">
+               ${createElements(word.synonyms)}
+            </div>
         </div>
         
         `;
@@ -59,6 +83,7 @@
     };
 
     const displayWord = (words) => {
+        
         const wordContainer = document.getElementById("word-container");
         wordContainer.innerHTML = "";
 
@@ -73,6 +98,7 @@
             </section>
             
             `
+            manageSpinner(false);
             return;
         }
 
@@ -88,7 +114,7 @@
             <button onclick="loadDetails(${word.id})" class="btn p-3 bg-[#1A91FF10] border-none rounded-[10px] hover:bg-[#88dd278e] ">
                 <i class="fa-solid fa-circle-info"></i>
             </button>
-            <button class="btn p-3 bg-[#1A91FF10] border-none rounded-[10px] hover:bg-[#88dd278e]">
+            <button onclick=(pronounceWord('${word.word}')) class="btn p-3 bg-[#1A91FF10] border-none rounded-[10px] hover:bg-[#88dd278e]">
                 <i class="fa-solid fa-volume-high"></i>
            </button>
         </div>
@@ -96,6 +122,7 @@
             `
             wordContainer.append(createDiv);
         });
+        manageSpinner(false);
     };
     
     const displayLessons = (lessons) => {
@@ -118,6 +145,28 @@
     };
 
 loadLessons ();
+
+document.getElementById("btn-search").addEventListener("click", () =>{
+    removeActive();
+    const inputField = document.getElementById("input-search");
+    const searchValue = inputField.value.trim().toLowerCase();
+    
+
+    fetch("https://openapi.programming-hero.com/api/words/all")
+    .then((res) => res.json())
+    .then((data) => {
+        const allWords = data.data; 
+        const filterWords = allWords.filter((word) => 
+            word.word.toLowerCase().includes(searchValue)
+    );
+    
+    displayWord(filterWords);
+
+
+    });
+
+    
+});
 
 
 // "status": true,
